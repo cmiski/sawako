@@ -12,6 +12,8 @@ func NewRouter(
 ) *chi.Mux {
 	r := chi.NewRouter()
 
+	// Add request ID middleware to generate or propagate request IDs
+	r.Use(middleware.RequestID)
 	// Add logging middleware to log incoming requests and their latency
 	r.Use(middleware.Logging)
 	// Add recovery middleware to handle panics gracefully

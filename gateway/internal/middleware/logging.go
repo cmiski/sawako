@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/cmiski/sawako/shared/contextx"
 )
 
 // custom response writer wrapper to capture status code
@@ -36,8 +38,11 @@ func Logging(
 
 		latency := time.Since(start)
 
+		requestID := contextx.GetRequestID(r.Context())
+
 		log.Printf(
-			"method=%s path=%s status=%d latency=%s",
+			"request_id=%s method=%s path=%s status=%d latency=%s",
+			requestID,
 			r.Method,
 			r.URL.Path,
 			rw.statusCode,
