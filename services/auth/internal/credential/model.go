@@ -9,7 +9,7 @@ import (
 type Credential struct {
 	ID             uuid.UUID
 	UserID         uuid.UUID
-	CredentialType string
+	CredentialType CredentialType
 	PasswordHash   string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time

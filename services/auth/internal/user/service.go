@@ -60,3 +60,21 @@ func (s *Service) Create(
 
 	return nil
 }
+
+func (s *Service) GetByEmail(
+	ctx context.Context,
+	email string,
+) (*User, error) {
+	user, err := s.repo.GetByEmail(
+		ctx,
+		email,
+	)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"get user by email: %w",
+			err,
+		)
+	}
+
+	return user, nil
+}
