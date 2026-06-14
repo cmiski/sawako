@@ -15,7 +15,7 @@ func RequestID(next http.Handler) http.Handler {
 		requestID := r.Header.Get("X-Request-ID")
 
 		if requestID == "" || !uuidx.IsValid(requestID) {
-			requestID = uuidx.NewV7()
+			requestID = uuidx.NewV7().String()
 		}
 
 		ctx := contextx.SetRequestID(

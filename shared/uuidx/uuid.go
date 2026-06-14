@@ -6,16 +6,18 @@ import (
 	"github.com/google/uuid"
 )
 
-func NewV7() string {
+func NewV7() uuid.UUID {
 	id, err := uuid.NewV7()
 	if err != nil {
 		panic(
 			fmt.Sprintf(
-				"uuidx: failed to generate UUIDv7: %v", err,
+				"uuidx: failed to generate UUIDv7: %v",
+				err,
 			),
 		)
 	}
-	return id.String()
+
+	return id
 }
 
 func IsValid(id string) bool {
