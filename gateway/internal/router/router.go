@@ -1,6 +1,8 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/cmiski/sawako/gateway/internal/handlers"
 	"github.com/cmiski/sawako/gateway/internal/middleware"
 
@@ -8,17 +10,20 @@ import (
 )
 
 func NewRouter(
-	healthHandler *handlers.HealthHandler, // dependency injection of the health handler
+	healthHandler *handlers.HealthHandler,
+	authProxy http.Handler,
+	eventProxy http.Handler,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
-	// Add request ID middleware to generate or propagate request IDs
 	r.Use(middleware.RequestID)
-	// Add logging middleware to log incoming requests and their latency
 	r.Use(middleware.Logging)
-	// Add recovery middleware to handle panics gracefully
 	r.Use(middleware.Recovery)
 
 	r.Get("/health", healthHandler.Health)
+
+	r.Handle("/auth/*", authProxy)
+	r.Handle("/events/*", eventProxy)
+
 	return r
 }

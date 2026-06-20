@@ -12,6 +12,7 @@ import (
 
 	"github.com/cmiski/sawako/gateway/internal/config"
 	"github.com/cmiski/sawako/gateway/internal/handlers"
+	"github.com/cmiski/sawako/gateway/internal/proxy"
 	"github.com/cmiski/sawako/gateway/internal/router"
 	"github.com/cmiski/sawako/gateway/internal/server"
 )
@@ -19,22 +20,51 @@ import (
 func main() {
 	cfg := config.Load()
 
+	authProxy, err := proxy.NewReverseProxy(
+		"auth",
+		cfg.AuthServiceURL,
+	)
+	if err != nil {
+		log.Fatalf(
+			"failed to create auth proxy: %v",
+			err,
+		)
+	}
+
+	eventProxy, err := proxy.NewReverseProxy(
+		"events",
+		cfg.EventServiceURL,
+	)
+	if err != nil {
+		log.Fatalf(
+			"failed to create events proxy: %v",
+			err,
+		)
+	}
+
 	healthHandler := handlers.NewHealthHandler()
 
 	r := router.NewRouter(
 		healthHandler,
+		authProxy,
+		eventProxy,
 	)
 
 	srv := server.NewServer(cfg.Port, r)
 
-	// Start the server in a separate goroutine
 	go func() {
 		if err := srv.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("failed to start server: %v", err)
 		}
 	}()
 
-	// channel to listen for interrupt or terminate signals
+	log.Printf(
+		"gateway listening on :%s (auth=%s, events=%s)",
+		cfg.Port,
+		cfg.AuthServiceURL,
+		cfg.EventServiceURL,
+	)
+
 	sigCh := make(chan os.Signal, 1)
 
 	signal.Notify(
@@ -43,7 +73,6 @@ func main() {
 		syscall.SIGTERM,
 	)
 
-	// Block until we receive a signal
 	<-sigCh
 
 	ctx, cancel := context.WithTimeout(
