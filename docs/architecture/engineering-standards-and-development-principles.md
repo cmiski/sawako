@@ -44,7 +44,7 @@ Route -> Database
 Expected:
 
 ```text
-Route -> Controller -> Service -> Repository -> Database
+Route -> Handler -> Service -> Repository -> Database
 ```
 
 Every service should follow this structure unless an ADR explicitly approves a different approach.
@@ -55,23 +55,23 @@ Routes should remain thin. They connect HTTP paths to controllers and should not
 
 Incorrect:
 
-```javascript
-router.post("/login", async (req, res) => {
-  // 100 lines of authentication logic
-});
+```go
+r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
+    // 100 lines of authentication logic
+})
 ```
 
 Expected flow:
 
 ```text
-Route -> Controller -> AuthService.login()
+Route -> Handler -> authentication.Service.Login()
 ```
 
 ### 3. Each Layer Has One Responsibility
 
 | Layer | Responsibilities | Not Responsible For |
 | --- | --- | --- |
-| Controller | Request handling, response shaping, validation error mapping. | Business rules and database access. |
+| Handler | Request handling, response shaping, validation error mapping. | Business rules and database access. |
 | Service | Business logic and use-case orchestration. | Raw SQL, HTTP routing, or response formatting. |
 | Repository | Database operations. | Business rules and request handling. |
 
@@ -87,16 +87,16 @@ Important values should be named constants or configuration values.
 
 Incorrect:
 
-```javascript
-if (token.expiresIn > 900) {
-  // ...
+```go
+if tokenExpiresIn > 900 {
+    // ...
 }
 ```
 
 Expected:
 
-```javascript
-const ACCESS_TOKEN_EXPIRY_SECONDS = 900;
+```go
+const accessTokenExpirySeconds = 900
 ```
 
 ### 5. Use Environment-Driven Configuration
@@ -105,8 +105,8 @@ Secrets and environment-specific values must not be hard-coded.
 
 Incorrect:
 
-```javascript
-const dbPassword = "mypassword";
+```go
+dbPassword := "mypassword"
 ```
 
 Expected:
@@ -137,8 +137,8 @@ Different errors should produce different responses and logs.
 
 Avoid unstructured logs such as:
 
-```javascript
-console.log("Something happened");
+```go
+log.Println("Something happened")
 ```
 
 Prefer structured logs:

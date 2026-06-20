@@ -2,21 +2,28 @@
 
 ## Status
 
-Accepted
+Accepted (revised)
 
 ## Decision
 
-Business services use:
+Business services use Go.
 
-- Node.js
-- Express
+The Auth Service is the first implemented business service and establishes the pattern for future services such as Event, Organization, and Notification.
 
 ## Alternatives Considered
 
-- Go
+- Node.js and Express
 - NestJS
 - Spring Boot
 
 ## Rationale
 
-The current strengths of the project are Node.js, Express, and JavaScript. Using them keeps the focus on architecture and backend engineering rather than learning a new framework at the same time.
+The API Gateway is already written in Go ([ADR-004](ADR-004-api-gateway-technology.md)). Implementing business services in Go keeps the monorepo on a single language, reuses shared packages under `shared/`, and avoids context-switching between runtimes during local development.
+
+The original decision favored Node.js and Express for familiarity. After implementation began, Go proved a better fit for service boundaries, interface-driven design, and alignment with the gateway stack.
+
+## Revision
+
+| Date | Change |
+| --- | --- |
+| 2026-06 | Revised from Node.js and Express to Go to match the implemented Auth Service. |

@@ -8,7 +8,7 @@
 - [Root README](#root-readme)
 - [API Gateway Structure](#api-gateway-structure)
 - [Services Structure](#services-structure)
-- [Node.js Service Structure Standard](#nodejs-service-structure-standard)
+- [Go Service Structure Standard](#go-service-structure-standard)
 - [Documentation Structure](#documentation-structure)
 - [Infrastructure Structure](#infrastructure-structure)
 - [Shared Code Policy](#shared-code-policy)
@@ -132,51 +132,62 @@ services/
 `-- search/
 ```
 
-## Node.js Service Structure Standard
+## Go Service Structure Standard
 
-Every Node.js service follows the same structure.
+Every Go business service follows the same structure. Services compile as packages within the root Go module (`github.com/cmiski/sawako`).
 
-Example:
+Example (Auth Service):
 
 ```text
 services/auth/
-|-- src/
-|-- tests/
+|-- cmd/
+|   `-- server/
+|       `-- main.go
+|-- internal/
+|   |-- authentication/
+|   |-- user/
+|   |-- credential/
+|   |-- refreshtoken/
+|   |-- handlers/
+|   `-- config/
 |-- migrations/
-|-- package.json
 |-- .env.example
 `-- README.md
 ```
 
-### `src/`
+### `cmd/`
+
+Contains application entry points only. Startup and dependency wiring belong here.
 
 ```text
-src/
-|-- controllers/
-|-- services/
-|-- repositories/
-|-- routes/
-|-- middleware/
-|-- validators/
-|-- models/
-|-- config/
-|-- utils/
-`-- app.js
+cmd/
+`-- server/
+    `-- main.go
+```
+
+### `internal/`
+
+Contains service implementation. Each domain area gets its own package.
+
+```text
+internal/
+|-- authentication/   # use-case orchestration (register, login, refresh)
+|-- user/             # user domain service and repository interface
+|-- credential/       # credential domain and repository interface
+|-- refreshtoken/     # refresh token domain and repository interface
+|-- handlers/         # HTTP handlers; decode requests, call services, write responses
+`-- config/           # environment and dependency configuration
 ```
 
 ### Layer Responsibilities
 
-| Directory | Responsibility |
+| Package | Responsibility |
 | --- | --- |
-| `controllers/` | Receive requests, call services, return responses. Controllers should not contain business logic. |
-| `services/` | Own business logic, use-case orchestration, and policy decisions. |
-| `repositories/` | Own database access only. Repositories should not contain business logic. |
-| `routes/` | Map HTTP paths to controllers. |
-| `middleware/` | Service-specific middleware such as error handling and request logging. |
-| `validators/` | Request validation schemas such as `RegisterSchema`, `LoginSchema`, and `CreateProjectSchema`. |
-| `models/` | Domain or persistence models where useful. |
-| `config/` | Environment and dependency configuration such as database and JWT settings. |
-| `utils/` | Small service-local utilities. Do not use this as a dumping ground. |
+| `handlers/` | Receive HTTP requests, validate input, call domain services, return responses. Handlers should not contain business logic. |
+| `authentication/` | Own authentication use cases and orchestrate calls across domain packages. |
+| `user/`, `credential/`, etc. | Domain models, domain services, and repository interfaces for a bounded context. |
+| Repository implementations | Concrete database access (for example PostgreSQL). Implementations belong in dedicated packages and must not contain business rules. |
+| `config/` | Environment variables, database connections, and JWT settings. |
 
 ### `migrations/`
 

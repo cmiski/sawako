@@ -45,7 +45,7 @@ Create the engineering foundation before writing business logic.
 | Milestone | Name | Deliverables | Learning Outcome |
 | --- | --- | --- | --- |
 | 0.1 | Project initialization | Monorepo, folder structure, Git setup, documentation structure. | Project organization and engineering workflow. |
-| 0.2 | Development environment | Go setup, Node.js setup, PostgreSQL setup, Docker setup. | Local development environment design. |
+| 0.2 | Development environment | Go setup, PostgreSQL setup, Docker setup. | Local development environment design. |
 | 0.3 | Architecture documentation | Blueprint, ADRs, context diagram, database diagrams. | Architecture thinking and decision recording. |
 
 ## Phase 1: API Gateway
@@ -74,7 +74,7 @@ Build the identity and ownership platform.
 
 | Milestone | Name | Deliverables | Learning Outcome |
 | --- | --- | --- | --- |
-| 2.1 | Express architecture | Controllers, services, repositories, routes, validators. | Layered service architecture. |
+| 2.1 | Go service architecture | Handlers, domain services, repository interfaces, migrations. | Layered service architecture. |
 | 2.2 | PostgreSQL integration | Connection pooling, queries, migrations. | Relational persistence in a service boundary. |
 | 2.3 | User registration | Registration endpoint with validation and password hashing. | Input validation and credential storage. |
 | 2.4 | Login | Login endpoint and authentication flow. | Identity verification. |

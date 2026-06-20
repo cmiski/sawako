@@ -130,7 +130,7 @@ swk_live_kid_xxxx.secret_xxxx
 | Area | Technology | Purpose |
 | --- | --- | --- |
 | API Gateway | Go | Routing, authentication, rate limiting, and request logging. |
-| Business services | Node.js and Express | Fast development using a familiar ecosystem while focusing on architecture. |
+| Business services | Go | Shared language with the API Gateway, strong typing, and a consistent monorepo module layout. |
 | Primary database | PostgreSQL | Relationships, transactions, strong consistency, and JSONB metadata. |
 | Cache and performance layer | Redis | Future caching, hot data storage, and distributed rate limiting. |
 | Search infrastructure | Elasticsearch | Future full-text search and indexing. |
