@@ -12,7 +12,59 @@ Copy `.env.example` to `.env` and adjust values for your local environment.
 
 | Variable | Description |
 | --- | --- |
+| `PORT` | HTTP listen port. Defaults to `8081`. |
 | `DATABASE_URL` | PostgreSQL connection string for `auth_db`. |
+| `JWT_SECRET` | Secret used to sign access tokens. |
+| `ACCESS_TOKEN_TTL_SECONDS` | Access token lifetime in seconds. Defaults to `900`. |
+
+## Run
+
+Apply migrations, then start the service from the repository root:
+
+```bash
+go run ./services/auth/cmd/migrate
+go run ./services/auth/cmd/server
+```
+
+## API
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/health` | Service health check. |
+| `POST` | `/auth/register` | Register a user with email and password. |
+| `POST` | `/auth/login` | Authenticate and receive access and refresh tokens. |
+
+### Register
+
+```json
+POST /auth/register
+{
+  "email": "user@example.com",
+  "password": "securepassword"
+}
+```
+
+Returns `201 Created` on success.
+
+### Login
+
+```json
+POST /auth/login
+{
+  "email": "user@example.com",
+  "password": "securepassword"
+}
+```
+
+Returns:
+
+```json
+{
+  "access_token": "...",
+  "refresh_token": "..."
+}
+```
+
 
 ## Migrations
 
@@ -20,12 +72,6 @@ Start PostgreSQL from the repository root:
 
 ```bash
 docker compose -f infrastructure/postgres/docker-compose.yaml up -d
-```
-
-Apply migrations:
-
-```bash
-go run ./services/auth/cmd/migrate
 ```
 
 Migrations live in `services/auth/migrations/` and are tracked in the `schema_migrations` table.
