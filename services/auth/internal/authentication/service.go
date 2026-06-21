@@ -383,3 +383,62 @@ func (s *Service) Refresh(
 		RefreshToken: newRefreshToken,
 	}, nil
 }
+
+func (s *Service) Logout(
+	ctx context.Context,
+	req RefreshRequest,
+) error {
+	refreshToken := strings.TrimSpace(
+		req.RefreshToken,
+	)
+
+	if refreshToken == "" {
+		return fmt.Errorf(
+			"logout: %w",
+			ErrInvalidRefreshToken,
+		)
+	}
+
+	tokenHash := s.tokenHasher.Hash(
+		refreshToken,
+	)
+
+	storedToken, err := s.refreshTokens.GetByHash(
+		ctx,
+		tokenHash,
+	)
+
+	switch {
+	case errors.Is(err, refreshtoken.ErrRefreshTokenNotFound):
+		return nil
+
+	case err == nil:
+		// continue
+
+	default:
+		return fmt.Errorf(
+			"logout: get refresh token: %w",
+			err,
+		)
+	}
+
+	if storedToken.RevokedAt != nil {
+		return nil
+	}
+
+	if err := s.refreshTokens.Revoke(
+		ctx,
+		storedToken.ID,
+	); err != nil {
+		if errors.Is(err, refreshtoken.ErrRefreshTokenNotFound) {
+			return nil
+		}
+
+		return fmt.Errorf(
+			"logout: revoke refresh token: %w",
+			err,
+		)
+	}
+
+	return nil
+}

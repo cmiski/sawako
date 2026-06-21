@@ -220,6 +220,57 @@ func (h *AuthHandler) Refresh(
 	)
 }
 
+func (h *AuthHandler) Logout(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	var req refreshRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+		return
+	}
+
+	if strings.TrimSpace(req.RefreshToken) == "" {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			"refresh_token is required",
+		)
+		return
+	}
+
+	err := h.auth.Logout(
+		r.Context(),
+		authentication.RefreshRequest{
+			RefreshToken: req.RefreshToken,
+		},
+	)
+	if err != nil {
+		if errors.Is(err, authentication.ErrInvalidRefreshToken) {
+			writeError(
+				w,
+				http.StatusUnauthorized,
+				"invalid refresh token",
+			)
+			return
+		}
+
+		writeError(
+			w,
+			http.StatusInternalServerError,
+			"logout failed",
+		)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func validateCredentials(
 	email string,
 	password string,

@@ -34,6 +34,7 @@ go run ./services/auth/cmd/server
 | `POST` | `/auth/register` | Register a user with email and password. |
 | `POST` | `/auth/login` | Authenticate and receive access and refresh tokens. |
 | `POST` | `/auth/refresh` | Rotate a refresh token and receive new tokens. |
+| `POST` | `/auth/logout` | Revoke a refresh token and end the session. |
 
 ### Register
 
@@ -76,6 +77,17 @@ POST /auth/refresh
 ```
 
 Returns a new access token and refresh token. The presented refresh token is revoked as part of rotation.
+
+### Logout
+
+```json
+POST /auth/logout
+{
+  "refresh_token": "..."
+}
+```
+
+Returns `204 No Content`. Revokes the presented refresh token if it is still active. Repeated logout requests are treated as successful.
 
 ## Migrations
 
