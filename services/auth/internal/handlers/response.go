@@ -46,3 +46,14 @@ func writeError(
 		},
 	)
 }
+
+func WriteUnauthorized(
+	w http.ResponseWriter,
+	message string,
+) {
+	writeError(
+		w,
+		http.StatusUnauthorized,
+		message,
+	)
+}

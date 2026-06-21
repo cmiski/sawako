@@ -15,6 +15,7 @@ import (
 	"github.com/cmiski/sawako/services/auth/internal/handlers"
 	"github.com/cmiski/sawako/services/auth/internal/jwt"
 	"github.com/cmiski/sawako/services/auth/internal/postgres"
+	"github.com/cmiski/sawako/services/auth/internal/project"
 	"github.com/cmiski/sawako/services/auth/internal/refreshtoken"
 	"github.com/cmiski/sawako/services/auth/internal/router"
 	"github.com/cmiski/sawako/services/auth/internal/security"
@@ -42,10 +43,12 @@ func main() {
 	userRepo := postgres.NewUserRepository(pool)
 	credentialRepo := postgres.NewCredentialRepository(pool)
 	refreshTokenRepo := postgres.NewRefreshTokenRepository(pool)
+	projectRepo := postgres.NewProjectRepository(pool)
 	txManager := postgres.NewTransactionManager(pool)
 
 	userService := user.NewService(userRepo)
 	refreshTokenService := refreshtoken.NewService()
+	projectService := project.NewService(projectRepo)
 
 	authService := authentication.NewService(
 		userService,
@@ -65,10 +68,12 @@ func main() {
 
 	healthHandler := handlers.NewHealthHandler()
 	authHandler := handlers.NewAuthHandler(authService)
+	projectHandler := handlers.NewProjectHandler(projectService)
 
 	r := router.NewRouter(
 		healthHandler,
 		authHandler,
+		projectHandler,
 	)
 
 	srv := server.NewServer(cfg.Port, r)

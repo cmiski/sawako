@@ -35,6 +35,10 @@ go run ./services/auth/cmd/server
 | `POST` | `/auth/login` | Authenticate and receive access and refresh tokens. |
 | `POST` | `/auth/refresh` | Rotate a refresh token and receive new tokens. |
 | `POST` | `/auth/logout` | Revoke a refresh token and end the session. |
+| `POST` | `/projects` | Create a project (requires `X-User-ID` from gateway). |
+| `GET` | `/projects` | List projects owned by the authenticated user. |
+| `PATCH` | `/projects/{id}` | Update a project owned by the authenticated user. |
+| `DELETE` | `/projects/{id}` | Delete a project owned by the authenticated user. |
 
 ### Register
 
@@ -89,6 +93,18 @@ POST /auth/logout
 
 Returns `204 No Content`. Revokes the presented refresh token if it is still active. Repeated logout requests are treated as successful.
 
+### Projects
+
+Project endpoints expect the gateway to validate JWT access tokens and forward the authenticated user as `X-User-ID`.
+
+```json
+POST /projects
+{
+  "name": "My App",
+  "description": "Portfolio site"
+}
+```
+
 ## Migrations
 
 Start PostgreSQL from the repository root:
@@ -106,6 +122,7 @@ Concrete repository implementations live in `internal/postgres/`:
 - `UserRepository`
 - `CredentialRepository`
 - `RefreshTokenRepository`
+- `ProjectRepository`
 - `TransactionManager`
 
 These implement the domain repository interfaces used by the authentication workflow.

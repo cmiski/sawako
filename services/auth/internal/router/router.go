@@ -9,6 +9,7 @@ import (
 func NewRouter(
 	healthHandler *handlers.HealthHandler,
 	authHandler *handlers.AuthHandler,
+	projectHandler *handlers.ProjectHandler,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
@@ -19,6 +20,15 @@ func NewRouter(
 	r.Post("/auth/login", authHandler.Login)
 	r.Post("/auth/refresh", authHandler.Refresh)
 	r.Post("/auth/logout", authHandler.Logout)
+
+	r.Route("/projects", func(r chi.Router) {
+		r.Use(middleware.RequireUserID)
+
+		r.Post("/", projectHandler.Create)
+		r.Get("/", projectHandler.List)
+		r.Patch("/{id}", projectHandler.Update)
+		r.Delete("/{id}", projectHandler.Delete)
+	})
 
 	return r
 }
