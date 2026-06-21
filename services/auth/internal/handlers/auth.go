@@ -39,6 +39,10 @@ type loginResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 func (h *AuthHandler) Register(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -144,6 +148,64 @@ func (h *AuthHandler) Login(
 			w,
 			http.StatusInternalServerError,
 			"login failed",
+		)
+		return
+	}
+
+	writeJSON(
+		w,
+		http.StatusOK,
+		loginResponse{
+			AccessToken:  resp.AccessToken,
+			RefreshToken: resp.RefreshToken,
+		},
+	)
+}
+
+func (h *AuthHandler) Refresh(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	var req refreshRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+		return
+	}
+
+	if strings.TrimSpace(req.RefreshToken) == "" {
+		writeError(
+			w,
+			http.StatusBadRequest,
+			"refresh_token is required",
+		)
+		return
+	}
+
+	resp, err := h.auth.Refresh(
+		r.Context(),
+		authentication.RefreshRequest{
+			RefreshToken: req.RefreshToken,
+		},
+	)
+	if err != nil {
+		if errors.Is(err, authentication.ErrInvalidRefreshToken) {
+			writeError(
+				w,
+				http.StatusUnauthorized,
+				"invalid refresh token",
+			)
+			return
+		}
+
+		writeError(
+			w,
+			http.StatusInternalServerError,
+			"refresh failed",
 		)
 		return
 	}

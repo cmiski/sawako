@@ -17,6 +17,7 @@ func NewRouter(
 	r.Get("/health", healthHandler.Health)
 	r.Post("/auth/register", authHandler.Register)
 	r.Post("/auth/login", authHandler.Login)
+	r.Post("/auth/refresh", authHandler.Refresh)
 
 	return r
 }

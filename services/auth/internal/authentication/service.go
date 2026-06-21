@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cmiski/sawako/services/auth/internal/credential"
+	"github.com/cmiski/sawako/services/auth/internal/refreshtoken"
 	"github.com/cmiski/sawako/services/auth/internal/user"
 )
 
@@ -23,6 +24,10 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	AccessToken  string
+	RefreshToken string
+}
+
+type RefreshRequest struct {
 	RefreshToken string
 }
 
@@ -239,5 +244,142 @@ func (s *Service) Login(
 	return &LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *Service) Refresh(
+	ctx context.Context,
+	req RefreshRequest,
+) (*LoginResponse, error) {
+	refreshToken := strings.TrimSpace(
+		req.RefreshToken,
+	)
+
+	if refreshToken == "" {
+		return nil, fmt.Errorf(
+			"refresh token: %w",
+			ErrInvalidRefreshToken,
+		)
+	}
+
+	tokenHash := s.tokenHasher.Hash(
+		refreshToken,
+	)
+
+	storedToken, err := s.refreshTokens.GetByHash(
+		ctx,
+		tokenHash,
+	)
+
+	switch {
+	case err == nil:
+		// continue
+
+	case errors.Is(err, refreshtoken.ErrRefreshTokenNotFound):
+		return nil, fmt.Errorf(
+			"refresh token: %w",
+			ErrInvalidRefreshToken,
+		)
+
+	default:
+		return nil, fmt.Errorf(
+			"refresh token: get: %w",
+			err,
+		)
+	}
+
+	if storedToken.RevokedAt != nil {
+		return nil, fmt.Errorf(
+			"refresh token: %w",
+			ErrInvalidRefreshToken,
+		)
+	}
+
+	if time.Now().After(storedToken.ExpiresAt) {
+		return nil, fmt.Errorf(
+			"refresh token: %w",
+			ErrInvalidRefreshToken,
+		)
+	}
+
+	var (
+		accessToken     string
+		newRefreshToken string
+	)
+
+	err = s.txManager.WithinTransaction(
+		ctx,
+		func(ctx context.Context) error {
+			if err := s.refreshTokens.Revoke(
+				ctx,
+				storedToken.ID,
+			); err != nil {
+				return fmt.Errorf(
+					"revoke refresh token: %w",
+					err,
+				)
+			}
+
+			claims := Claims{
+				UserID: storedToken.UserID,
+			}
+
+			issuedAccessToken, err := s.issuer.IssueAccessToken(
+				claims,
+			)
+			if err != nil {
+				return fmt.Errorf(
+					"issue access token: %w",
+					err,
+				)
+			}
+
+			issuedRefreshToken, err := s.refreshTokenGenerator.Generate()
+			if err != nil {
+				return fmt.Errorf(
+					"generate refresh token: %w",
+					err,
+				)
+			}
+
+			newHash := s.tokenHasher.Hash(
+				issuedRefreshToken,
+			)
+
+			expiresAt := time.Now().
+				Add(refreshTokenTTL)
+
+			newToken := s.refreshTokenService.New(
+				storedToken.UserID,
+				newHash,
+				expiresAt,
+			)
+
+			if err := s.refreshTokens.Create(
+				ctx,
+				newToken,
+			); err != nil {
+				return fmt.Errorf(
+					"create refresh token: %w",
+					err,
+				)
+			}
+
+			accessToken = issuedAccessToken
+			newRefreshToken = issuedRefreshToken
+
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"refresh token: %w",
+			err,
+		)
+	}
+
+	return &LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
 	}, nil
 }

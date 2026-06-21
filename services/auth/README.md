@@ -33,6 +33,7 @@ go run ./services/auth/cmd/server
 | `GET` | `/health` | Service health check. |
 | `POST` | `/auth/register` | Register a user with email and password. |
 | `POST` | `/auth/login` | Authenticate and receive access and refresh tokens. |
+| `POST` | `/auth/refresh` | Rotate a refresh token and receive new tokens. |
 
 ### Register
 
@@ -65,6 +66,16 @@ Returns:
 }
 ```
 
+### Refresh
+
+```json
+POST /auth/refresh
+{
+  "refresh_token": "..."
+}
+```
+
+Returns a new access token and refresh token. The presented refresh token is revoked as part of rotation.
 
 ## Migrations
 
