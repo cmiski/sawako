@@ -3,9 +3,10 @@ package config
 import "os"
 
 type Config struct {
-	Port             string
-	AuthServiceURL   string
-	EventServiceURL  string
+	Port            string
+	AuthServiceURL  string
+	EventServiceURL string
+	JWTSecret       string
 }
 
 func getEnv(
@@ -31,6 +32,10 @@ func Load() *Config {
 		EventServiceURL: getEnv(
 			"EVENT_SERVICE_URL",
 			"http://localhost:8082",
+		),
+		JWTSecret: getEnv(
+			"JWT_SECRET",
+			"dev-secret-change-me",
 		),
 	}
 }

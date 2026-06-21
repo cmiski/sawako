@@ -12,6 +12,7 @@ import (
 
 	"github.com/cmiski/sawako/gateway/internal/config"
 	"github.com/cmiski/sawako/gateway/internal/handlers"
+	"github.com/cmiski/sawako/gateway/internal/jwt"
 	"github.com/cmiski/sawako/gateway/internal/proxy"
 	"github.com/cmiski/sawako/gateway/internal/router"
 	"github.com/cmiski/sawako/gateway/internal/server"
@@ -43,11 +44,13 @@ func main() {
 	}
 
 	healthHandler := handlers.NewHealthHandler()
+	jwtValidator := jwt.NewValidator(cfg.JWTSecret)
 
 	r := router.NewRouter(
 		healthHandler,
 		authProxy,
 		eventProxy,
+		jwtValidator,
 	)
 
 	srv := server.NewServer(cfg.Port, r)

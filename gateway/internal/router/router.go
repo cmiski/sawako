@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cmiski/sawako/gateway/internal/handlers"
+	"github.com/cmiski/sawako/gateway/internal/jwt"
 	"github.com/cmiski/sawako/gateway/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
@@ -13,6 +14,7 @@ func NewRouter(
 	healthHandler *handlers.HealthHandler,
 	authProxy http.Handler,
 	eventProxy http.Handler,
+	jwtValidator *jwt.Validator,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
@@ -24,6 +26,11 @@ func NewRouter(
 
 	r.Handle("/auth/*", authProxy)
 	r.Handle("/events/*", eventProxy)
+
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.JWTAuth(jwtValidator))
+		r.Handle("/projects/*", authProxy)
+	})
 
 	return r
 }
